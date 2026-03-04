@@ -10,6 +10,8 @@ use App\Http\Controllers\VenueController;
 
 Route::get('/health', [HealthController::class, 'index'])->middleware('jwt.auth');
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::get('/me', [AuthController::class, 'me'])->middleware('jwt.auth');
 
 Route::get('/dashboard', function () {
     return response()->json(['message' => 'Welcome to the dashboard']);
@@ -58,5 +60,58 @@ Route::middleware('jwt.auth')->group(function () {
     Route::delete('/venues/{id}', [VenueController::class, 'destroy']);
     Route::post('/venues/{id}/restore', [VenueController::class, 'restore']);
 });
+
+Route::middleware('auth:api')->group(function () {
+    Route::middleware('role:1')
+    ->prefix('super-admin')
+    ->group(function () {
+        Route::get('/dashboard', function () {
+            return response()->json([
+                'message' => 'Super Admin Access Granted'
+            ]);
+        });
+    });
+    
+    Route::middleware('role:2')
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('/dashboard', function () {
+            return response()->json([
+                'message' => 'Admin Access Granted'
+            ]);
+        });
+    });
+
+    Route::middleware('role:3')
+    ->prefix('franchise/Organizer')
+    ->group(function () {
+        Route::get('/dashboard', function () {
+            return response()->json([
+                'message' => 'Franchise/Organizer Access Granted'
+            ]);
+        });
+    });
+
+    Route::middleware('role:4')
+    ->prefix('scorer')
+    ->group(function () {
+        Route::get('/dashboard', function () {
+            return response()->json([
+                'message' => 'Scorer Access Granted'
+            ]);
+        });
+    });
+
+    Route::middleware('role:5')
+    ->prefix('user')
+    ->group(function () {
+        Route::get('/dashboard', function () {
+            return response()->json([
+                'message' => 'User Access Granted'
+            ]);
+        });
+    });
+});
+
 
 
