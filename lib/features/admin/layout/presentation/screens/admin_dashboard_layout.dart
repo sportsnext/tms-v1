@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tms_flutter/features/admin/layout/presentation/widgets/sidebar.dart';
 import 'package:tms_flutter/features/admin/layout/presentation/widgets/header.dart';
 import 'package:tms_flutter/features/admin/dashboard/presentation/screens/dashboard_screen.dart';
-
+import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
 import 'package:tms_flutter/features/admin/events/presentation/screens/event_list_screen.dart';
 // TODO: uncomment as you build each screen
 // import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
@@ -65,8 +65,8 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
       case SidebarRoutes.eventMaster:
         return const EventListScreen();
       // TODO: uncomment as you build each screen
-      // case SidebarRoutes.venueMaster:
-      //   return const VenueListScreen();
+      case SidebarRoutes.venueMaster:
+        return const VenueListScreen();
       // case SidebarRoutes.sportsMaster:
       //   return const SportsListScreen();
       // case SidebarRoutes.playerMaster:
