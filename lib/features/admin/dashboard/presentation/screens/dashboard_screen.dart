@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:tms_flutter/features/admin/events/presentation/screens/event_list_screen.dart';
+import 'package:tms_flutter/features/admin/layout/presentation/widgets/sidebar.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  final void Function(Widget, String)? onNavigate;
+
+  const DashboardScreen({super.key, this.onNavigate});
 
   @override
   Widget build(BuildContext context) {
@@ -435,7 +439,7 @@ class DashboardScreen extends StatelessWidget {
       {"label": "Create New Tournament", "route": "/admin/tournaments", "icon": Icons.emoji_events_outlined, "color": const Color(0xFF0A46D8)},
       {"label": "Add Team",              "route": "/admin/teams",       "icon": Icons.groups_outlined,       "color": const Color(0xFF8B5CF6)},
       {"label": "Add Player",            "route": "/admin/players",     "icon": Icons.person_add_outlined,   "color": const Color(0xFF10B981)},
-      {"label": "Create Event",          "route": "/admin/events",      "icon": Icons.event_outlined,        "color": const Color(0xFFF59E0B)},
+      {"label": "Create Event", "sidebarRoute": SidebarRoutes.eventMaster, "screen": const EventListScreen(), "icon": Icons.event_outlined, "color": const Color(0xFFF59E0B),},
       {"label": "Add Venue",             "route": "/admin/venues",      "icon": Icons.location_on_outlined,  "color": const Color(0xFFEF4444)},
     ];
 
@@ -448,13 +452,16 @@ class DashboardScreen extends StatelessWidget {
           Text("Quick Actions", style: sectionTitle()),
           const SizedBox(height: 20),
           ...actions.map(
-            (a) => _QuickActionButton(
-              label: a["label"] as String,
-              route: a["route"] as String,
-              icon:  a["icon"]  as IconData,
-              color: a["color"] as Color,
-            ),
+           (a) => _QuickActionButton(
+           label:        a["label"]        as String,
+           icon:         a["icon"]         as IconData,
+           color:        a["color"]        as Color,
+           sidebarRoute: a["sidebarRoute"] as String?,
+           route:        a["route"]        as String?,
+           screen:       a["screen"]       as Widget?,
+           onNavigate:   onNavigate,
           ),
+          ).toList(),
         ],
       ),
     );
@@ -487,15 +494,21 @@ class DashboardScreen extends StatelessWidget {
 // ── Quick Action Button — stateful for hover effect ───────────
 class _QuickActionButton extends StatefulWidget {
   final String   label;
-  final String   route;
+  final String?  sidebarRoute;
+  final String?  route;
+  final Widget?  screen;
   final IconData icon;
   final Color    color;
+  final void Function(Widget, String)? onNavigate;
 
   const _QuickActionButton({
     required this.label,
-    required this.route,
+    this.sidebarRoute,
+    this.route,
     required this.icon,
     required this.color,
+    this.screen,
+    this.onNavigate,
   });
 
   @override
@@ -514,7 +527,13 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
         onEnter: (_) => setState(() => _hovered = true),
         onExit:  (_) => setState(() => _hovered = false),
         child: GestureDetector(
-          onTap: () => Navigator.pushNamed(context, widget.route),
+          onTap: () {
+            if (widget.route != null) {
+              Navigator.pushNamed(context, widget.route!);
+            } else if (widget.screen != null) {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => widget.screen!));
+            }
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,

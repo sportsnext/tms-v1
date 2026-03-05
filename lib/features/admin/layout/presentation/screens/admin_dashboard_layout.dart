@@ -3,15 +3,12 @@ import 'package:tms_flutter/features/admin/layout/presentation/widgets/sidebar.d
 import 'package:tms_flutter/features/admin/layout/presentation/widgets/header.dart';
 import 'package:tms_flutter/features/admin/dashboard/presentation/screens/dashboard_screen.dart';
 
+import 'package:tms_flutter/features/admin/events/presentation/screens/event_list_screen.dart';
 // TODO: uncomment as you build each screen
-// import 'package:tms_flutter/features/admin/events/presentation/screens/event_list_screen.dart';
 // import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
 
 class AdminDashboardLayout extends StatefulWidget {
-  /// Optional — used only when navigating from a route (e.g. /admin/past-tournaments)
-  /// Header and sidebar navigation do NOT use this — they use callbacks instead.
   final Widget? initialScreen;
-
   const AdminDashboardLayout({super.key, this.initialScreen});
 
   @override
@@ -19,58 +16,71 @@ class AdminDashboardLayout extends StatefulWidget {
 }
 
 class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
-  // Sidebar active highlight
   String _sidebarRoute = SidebarRoutes.dashboard;
-
-  // The widget currently shown in the content area
   late Widget _currentScreen;
 
   @override
   void initState() {
     super.initState();
-    // If a specific screen was passed via route (e.g. past-tournaments),
-    // show that — otherwise show dashboard
-    _currentScreen = widget.initialScreen ?? const DashboardScreen();
+    _currentScreen = widget.initialScreen ?? _buildDashboard();
   }
 
-  // ── Called by Sidebar ──────────────────────────────────────
-  void _onSidebarRouteChanged(String route) {
+  // ── Build Dashboard with onNavigate wired ─────────────────
+  // Always build via this method so onNavigate is always fresh
+  Widget _buildDashboard() {
+    return DashboardScreen(
+      onNavigate: _navigateTo,
+    );
+  }
+
+  // ── Single navigation method used by EVERYONE ─────────────
+  // Header passes screen only (no sidebarRoute change)
+  // Dashboard quick actions pass both screen + sidebarRoute
+  void _navigateTo(Widget screen, String sidebarRoute) {
     setState(() {
-      _sidebarRoute  = route;
-      _currentScreen = _screenForSidebarRoute(route);
+      _sidebarRoute  = sidebarRoute;
+      _currentScreen = screen;
     });
   }
 
-  // ── Called by Header (My Profile / Settings / Notifications) ─
-  // Sidebar highlight stays unchanged — only content area changes
+  // ── Called by Sidebar ─────────────────────────────────────
+  void _onSidebarRouteChanged(String route) {
+    setState(() {
+      _sidebarRoute  = route;
+      _currentScreen = _screenForRoute(route);
+    });
+  }
+
+  // ── Called by Header ──────────────────────────────────────
+  // Sidebar highlight stays, only content changes
   void _onHeaderNavigation(Widget screen) {
     setState(() => _currentScreen = screen);
   }
 
-  // ── Sidebar route → screen mapping ────────────────────────
-  Widget _screenForSidebarRoute(String route) {
+  // ── Route → Screen map ────────────────────────────────────
+  Widget _screenForRoute(String route) {
     switch (route) {
       case SidebarRoutes.dashboard:
-        return const DashboardScreen();
+        return _buildDashboard();
+      case SidebarRoutes.eventMaster:
+        return const EventListScreen();
       // TODO: uncomment as you build each screen
-      // case SidebarRoutes.eventMaster:
-      //   return const EventListScreen();
+      // case SidebarRoutes.venueMaster:
+      //   return const VenueListScreen();
       // case SidebarRoutes.sportsMaster:
       //   return const SportsListScreen();
       // case SidebarRoutes.playerMaster:
       //   return const PlayerListScreen();
-      // case SidebarRoutes.teamManagement:
-      //   return const TeamListScreen();
-      // case SidebarRoutes.venueMaster:
-      //   return const VenueListScreen();
       // case SidebarRoutes.userManagement:
       //   return const UserListScreen();
+      // case SidebarRoutes.teamManagement:
+      //   return const TeamListScreen();
       // case SidebarRoutes.tournamentModule:
       //   return const TournamentListScreen();
       // case SidebarRoutes.reports:
       //   return const ReportsScreen();
       default:
-        return const DashboardScreen();
+        return _buildDashboard();
     }
   }
 
@@ -80,13 +90,13 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
       backgroundColor: const Color(0xFFF4F8FF),
       body: Row(
         children: [
-          // ── LEFT SIDEBAR ─────────────────────────────────
+          // ── Sidebar ───────────────────────────────────────
           Sidebar(
             currentRoute: _sidebarRoute,
             onRouteChanged: _onSidebarRouteChanged,
           ),
 
-          // ── RIGHT: Header + Content ───────────────────────
+          // ── Header + Content ──────────────────────────────
           Expanded(
             child: Column(
               children: [
@@ -97,13 +107,11 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
                 ),
                 Expanded(
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    switchInCurve: Curves.easeIn,
-                    switchOutCurve: Curves.easeOut,
+                    duration: const Duration(milliseconds: 200),
                     transitionBuilder: (child, animation) =>
                         FadeTransition(opacity: animation, child: child),
                     child: KeyedSubtree(
-                      key: ValueKey(_currentScreen.runtimeType),
+                      key: ValueKey(_sidebarRoute + _currentScreen.runtimeType.toString()),
                       child: _currentScreen,
                     ),
                   ),
