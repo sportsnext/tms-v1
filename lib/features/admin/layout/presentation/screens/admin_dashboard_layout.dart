@@ -5,6 +5,7 @@ import 'package:tms_flutter/features/admin/dashboard/presentation/screens/dashbo
 import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
 import 'package:tms_flutter/features/admin/events/presentation/screens/event_list_screen.dart';
 import 'package:tms_flutter/features/admin/sports/presentation/screens/sports_list_screen.dart';
+import 'package:tms_flutter/features/admin/players/presentation/screens/player_list_screen.dart';
 // TODO: uncomment as you build each screen
 // import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
 
@@ -70,8 +71,8 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
         return const VenueListScreen();
       case SidebarRoutes.sportsMaster:
         return const SportsListScreen();
-      // case SidebarRoutes.playerMaster:
-      //   return const PlayerListScreen();
+      case SidebarRoutes.playerMaster:
+        return const PlayerListScreen();
       // case SidebarRoutes.userManagement:
       //   return const UserListScreen();
       // case SidebarRoutes.teamManagement:
