@@ -8,6 +8,12 @@ import 'package:tms_flutter/features/admin/players/data/models/player_model.dart
 import 'add_player_screen.dart';
 import 'edit_player_screen.dart';
 
+// pubspec.yaml dependency required:
+//   file_picker: ^8.0.0
+//
+// dart:html  → Flutter Web (already available, no extra package needed)
+// For mobile/desktop builds, swap _downloadTemplate() with:
+//   path_provider + dart:io File write, then open with share_plus
 
 // Place at: lib/features/admin/players/presentation/screens/player_list_screen.dart
 
@@ -502,7 +508,7 @@ class _PlayerRowState extends State<_PlayerRow> {
         child: Row(children: [
           _Avatar(player: p, radius: 22),
           const SizedBox(width: 12),
-          // Name + email
+          // Name + email + ID
           Expanded(flex: 3, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Flexible(child: Text(p.fullName,
@@ -520,9 +526,17 @@ class _PlayerRowState extends State<_PlayerRow> {
                 ),
               ],
             ]),
-            const SizedBox(height: 2),
+            const SizedBox(height: 1),
             Text(p.email, overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+            const SizedBox(height: 2),
+            Row(children: [
+              Icon(Icons.tag_rounded, size: 11, color: Colors.grey.shade400),
+              const SizedBox(width: 2),
+              Text(p.id, overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade400,
+                      fontFamily: 'monospace', fontWeight: FontWeight.w600)),
+            ]),
           ])),
           // Gender / Age
           Expanded(flex: 2, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -669,6 +683,14 @@ class _DuplicatesTab extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text('${p.email}  ·  ${p.phone}  ·  ${p.city}',
                       style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                  const SizedBox(height: 2),
+                  Row(children: [
+                    Icon(Icons.tag_rounded, size: 10, color: Colors.grey.shade400),
+                    const SizedBox(width: 2),
+                    Text(p.id, style: TextStyle(fontSize: 10,
+                        color: Colors.grey.shade400, fontFamily: 'monospace',
+                        fontWeight: FontWeight.w600)),
+                  ]),
                 ])),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   Text("${p.totalMatches} matches",
@@ -1014,7 +1036,16 @@ class _MergeSlot extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF111827)))),
                   ]),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
+                  Row(children: [
+                    Icon(Icons.tag_rounded, size: 10, color: Colors.grey.shade400),
+                    const SizedBox(width: 2),
+                    Flexible(child: Text(player!.id,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 10,
+                            color: color, fontFamily: 'monospace',
+                            fontWeight: FontWeight.w700))),
+                  ]),
                   Text(player!.skillLevel,
                       style: TextStyle(fontSize: 10,
                           color: player!.skillColor,
@@ -1087,7 +1118,16 @@ class _MergeSearchRowState extends State<_MergeSearchRow> {
                     style: const TextStyle(fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF111827))),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
+                Row(children: [
+                  Icon(Icons.tag_rounded, size: 10, color: Colors.grey.shade400),
+                  const SizedBox(width: 2),
+                  Text(p.id,
+                      style: TextStyle(fontSize: 10,
+                          color: const Color(0xFF0A46D8),
+                          fontFamily: 'monospace', fontWeight: FontWeight.w700)),
+                ]),
+                const SizedBox(height: 1),
                 Text('${p.email}  ·  ${p.phone}',
                     style: TextStyle(fontSize: 11,
                         color: Colors.grey.shade500),
@@ -1301,7 +1341,15 @@ class _MergeDialogState extends State<_MergeDialog> {
                                       fontWeight: FontWeight.bold, letterSpacing: 0.5))),
                           ],
                         ]),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
+                        Row(children: [
+                          Icon(Icons.tag_rounded, size: 11, color: Colors.grey.shade400),
+                          const SizedBox(width: 3),
+                          Text(p.id, style: TextStyle(fontSize: 11,
+                              color: const Color(0xFF0A46D8),
+                              fontFamily: 'monospace', fontWeight: FontWeight.w700)),
+                        ]),
+                        const SizedBox(height: 3),
                         Row(children: [
                           Icon(Icons.email_outlined, size: 12, color: Colors.grey.shade400),
                           const SizedBox(width: 4),
@@ -1460,6 +1508,14 @@ class _HistoryDialog extends StatelessWidget {
                 Text(player.fullName, style: const TextStyle(
                     fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0A1D4A))),
                 const SizedBox(height: 3),
+                Row(children: [
+                  Icon(Icons.tag_rounded, size: 11, color: Colors.grey.shade400),
+                  const SizedBox(width: 2),
+                  Text(player.id, style: TextStyle(fontSize: 11,
+                      color: const Color(0xFF0A46D8),
+                      fontFamily: 'monospace', fontWeight: FontWeight.w700)),
+                ]),
+                const SizedBox(height: 4),
                 Row(children: [
                   _Mini(label: "${player.totalMatches} Matches",
                       color: const Color(0xFF0A46D8)),

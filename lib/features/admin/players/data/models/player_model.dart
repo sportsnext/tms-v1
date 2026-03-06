@@ -215,7 +215,7 @@ class PlayerModel {
 class PlayerSeeds {
   static List<PlayerModel> get all => [
     PlayerModel(
-      id: 'p1', firstName: 'Arjun', lastName: 'Mehta',
+      id: '101', firstName: 'Arjun', lastName: 'Mehta',
       email: 'arjun.mehta@email.com', phone: '9876543210',
       gender: 'Male', ageGroup: '18–30', skillLevel: 'Advanced',
       city: 'Mumbai', state: 'Maharashtra', country: 'India',
@@ -229,7 +229,7 @@ class PlayerSeeds {
       ],
     ),
     PlayerModel(
-      id: 'p2', firstName: 'Priya', lastName: 'Sharma',
+      id: '102', firstName: 'Priya', lastName: 'Sharma',
       email: 'priya.sharma@email.com', phone: '9823456789',
       gender: 'Female', ageGroup: '18–30', skillLevel: 'Intermediate',
       city: 'Pune', state: 'Maharashtra', country: 'India',
@@ -241,7 +241,7 @@ class PlayerSeeds {
       ],
     ),
     PlayerModel(
-      id: 'p3', firstName: 'Rohan', lastName: 'Kapoor',
+      id: '103', firstName: 'Rohan', lastName: 'Kapoor',
       email: 'rohan.k@email.com', phone: '9912345678',
       gender: 'Male', ageGroup: '31–45', skillLevel: 'Professional',
       city: 'Delhi', state: 'Delhi', country: 'India',
@@ -255,7 +255,7 @@ class PlayerSeeds {
       ],
     ),
     PlayerModel(
-      id: 'p4', firstName: 'Sneha', lastName: 'Joshi',
+      id: '104', firstName: 'Sneha', lastName: 'Joshi',
       email: 'sneha.joshi@email.com', phone: '9745678901',
       gender: 'Female', ageGroup: '18–30', skillLevel: 'Beginner',
       city: 'Bangalore', state: 'Karnataka', country: 'India',
@@ -264,7 +264,7 @@ class PlayerSeeds {
       history: [],
     ),
     PlayerModel(
-      id: 'p5', firstName: 'Vikram', lastName: 'Singh',
+      id: '105', firstName: 'Vikram', lastName: 'Singh',
       email: 'vikram.singh@email.com', phone: '9634567890',
       gender: 'Male', ageGroup: '46–60', skillLevel: 'Intermediate',
       city: 'Mumbai', state: 'Maharashtra', country: 'India',
@@ -277,7 +277,7 @@ class PlayerSeeds {
     ),
     // Intentional duplicate of p1 to demonstrate detection + merge
     PlayerModel(
-      id: 'p6', firstName: 'Arjun', lastName: 'Mehta',
+      id: '106', firstName: 'Arjun', lastName: 'Mehta',
       email: 'arjun.mehta@email.com', phone: '9876543210',
       gender: 'Male', ageGroup: '18–30', skillLevel: 'Intermediate',
       city: 'Mumbai', state: 'Maharashtra', country: 'India',
