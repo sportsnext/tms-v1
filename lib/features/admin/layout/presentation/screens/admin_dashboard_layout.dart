@@ -5,10 +5,7 @@ import 'package:tms_flutter/features/admin/dashboard/presentation/screens/dashbo
 import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
 import 'package:tms_flutter/features/admin/sports/presentation/screens/sports_list_screen.dart';
 import 'package:tms_flutter/features/admin/players/presentation/screens/player_list_screen.dart';
-<<<<<<< HEAD
-=======
 import 'package:tms_flutter/features/admin/events/presentation/screens/event_list_screen.dart';
->>>>>>> 8f32c4c (player  Ui changes updated and dashboard_screen)
 // TODO: uncomment as you build each screen
 // import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
 
