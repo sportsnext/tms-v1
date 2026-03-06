@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tms_flutter/features/admin/events/presentation/screens/event_list_screen.dart';
+import 'package:tms_flutter/features/admin/layout/presentation/screens/admin_dashboard_layout.dart';
 import 'package:tms_flutter/features/admin/layout/presentation/widgets/sidebar.dart';
+import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
+import 'package:tms_flutter/features/admin/players/presentation/screens/player_list_screen.dart';
+
 
 class DashboardScreen extends StatelessWidget {
   final void Function(Widget, String)? onNavigate;
@@ -439,7 +443,7 @@ class DashboardScreen extends StatelessWidget {
       {"label": "Create New Tournament", "route": "/admin/tournaments", "icon": Icons.emoji_events_outlined, "color": const Color(0xFF0A46D8)},
       {"label": "Add Team",              "route": "/admin/teams",       "icon": Icons.groups_outlined,       "color": const Color(0xFF8B5CF6)},
       {"label": "Add Player",            "route": "/admin/players",     "icon": Icons.person_add_outlined,   "color": const Color(0xFF10B981)},
-      {"label": "Create Event", "sidebarRoute": SidebarRoutes.eventMaster, "screen": const EventListScreen(), "icon": Icons.event_outlined, "color": const Color(0xFFF59E0B),},
+      {"label": "Create Event",          "route": "/admin/events",      "icon": Icons.event_outlined,        "color": const Color(0xFFF59E0B)},
       {"label": "Add Venue",             "route": "/admin/venues",      "icon": Icons.location_on_outlined,  "color": const Color(0xFFEF4444)},
     ];
 
@@ -528,12 +532,44 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
         onExit:  (_) => setState(() => _hovered = false),
         child: GestureDetector(
           onTap: () {
-            if (widget.route != null) {
-              Navigator.pushNamed(context, widget.route!);
-            } else if (widget.screen != null) {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => widget.screen!));
+            if(widget.route == "/admin/events") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AdminDashboardLayout(
+                    initialScreen: EventListScreen(),
+                    initialRoute: SidebarRoutes.eventMaster,
+                  ),
+                ),
+              );
+            } 
+            
+            else if(widget.route == "/admin/venues") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AdminDashboardLayout(
+                    initialScreen: VenueListScreen(),
+                    initialRoute: SidebarRoutes.venueMaster,
+                  ),
+                ),
+              );
             }
+            else if(widget.route == "/admin/players") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AdminDashboardLayout(
+                    initialScreen: PlayerListScreen(),
+                    initialRoute: SidebarRoutes.playerMaster,
+                  ),
+                ),
+              );
+            }
+
+            
           },
+
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
@@ -542,24 +578,25 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
             decoration: BoxDecoration(
               color: _hovered
                   ? widget.color
-                  : widget.color.withOpacity(0.07),
+                  : widget.color.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: _hovered
                     ? widget.color
-                    : widget.color.withOpacity(0.3),
+                    : widget.color.withValues(alpha: 0.3),
                 width: 1.5,
               ),
               boxShadow: _hovered
                   ? [
                       BoxShadow(
-                        color: widget.color.withOpacity(0.3),
+                        color: widget.color.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                     ]
                   : [],
             ),
+            
             child: Row(
               children: [
                 // Icon container

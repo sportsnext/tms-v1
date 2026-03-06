@@ -3,15 +3,23 @@ import 'package:tms_flutter/features/admin/layout/presentation/widgets/sidebar.d
 import 'package:tms_flutter/features/admin/layout/presentation/widgets/header.dart';
 import 'package:tms_flutter/features/admin/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
-import 'package:tms_flutter/features/admin/events/presentation/screens/event_list_screen.dart';
 import 'package:tms_flutter/features/admin/sports/presentation/screens/sports_list_screen.dart';
 import 'package:tms_flutter/features/admin/players/presentation/screens/player_list_screen.dart';
+<<<<<<< HEAD
+=======
+import 'package:tms_flutter/features/admin/events/presentation/screens/event_list_screen.dart';
+>>>>>>> 8f32c4c (player  Ui changes updated and dashboard_screen)
 // TODO: uncomment as you build each screen
 // import 'package:tms_flutter/features/admin/venues/presentation/screens/venue_list_screen.dart';
 
 class AdminDashboardLayout extends StatefulWidget {
   final Widget? initialScreen;
-  const AdminDashboardLayout({super.key, this.initialScreen});
+  final String? initialRoute;
+  const AdminDashboardLayout({
+    super.key,
+    this.initialScreen,
+    this.initialRoute,
+  });
 
   @override
   State<AdminDashboardLayout> createState() => _AdminDashboardLayoutState();
@@ -24,15 +32,31 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
   @override
   void initState() {
     super.initState();
-    _currentScreen = widget.initialScreen ?? _buildDashboard();
+    if (widget.initialScreen != null) {
+      _currentScreen = widget.initialScreen!;
+    } else {
+      _currentScreen = const DashboardScreen();
+    }
+    if (widget.initialRoute != null) {
+      _sidebarRoute = widget.initialRoute!;
+    }
+    loadRole();
+
+  }
+  
+  Future<void> loadRole() async {
+    // Simulate loading role from storage
+    await Future.delayed(const Duration(seconds: 1));
+    // For demo, we'll just set it to "Admin"
+    setState(() {
+      // _userRole = "Admin";
+    });
   }
 
   // ── Build Dashboard with onNavigate wired ─────────────────
   // Always build via this method so onNavigate is always fresh
   Widget _buildDashboard() {
-    return DashboardScreen(
-      onNavigate: _navigateTo,
-    );
+    return DashboardScreen(onNavigate: _navigateTo);
   }
 
   // ── Single navigation method used by EVERYONE ─────────────
@@ -40,7 +64,7 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
   // Dashboard quick actions pass both screen + sidebarRoute
   void _navigateTo(Widget screen, String sidebarRoute) {
     setState(() {
-      _sidebarRoute  = sidebarRoute;
+      _sidebarRoute = sidebarRoute;
       _currentScreen = screen;
     });
   }
@@ -48,7 +72,7 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
   // ── Called by Sidebar ─────────────────────────────────────
   void _onSidebarRouteChanged(String route) {
     setState(() {
-      _sidebarRoute  = route;
+      _sidebarRoute = route;
       _currentScreen = _screenForRoute(route);
     });
   }
@@ -113,7 +137,9 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
                     transitionBuilder: (child, animation) =>
                         FadeTransition(opacity: animation, child: child),
                     child: KeyedSubtree(
-                      key: ValueKey(_sidebarRoute + _currentScreen.runtimeType.toString()),
+                      key: ValueKey(
+                        _sidebarRoute + _currentScreen.runtimeType.toString(),
+                      ),
                       child: _currentScreen,
                     ),
                   ),

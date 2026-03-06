@@ -8,12 +8,6 @@ import 'package:tms_flutter/features/admin/players/data/models/player_model.dart
 import 'add_player_screen.dart';
 import 'edit_player_screen.dart';
 
-// pubspec.yaml dependency required:
-//   file_picker: ^8.0.0
-//
-// dart:html  → Flutter Web (already available, no extra package needed)
-// For mobile/desktop builds, swap _downloadTemplate() with:
-//   path_provider + dart:io File write, then open with share_plus
 
 // Place at: lib/features/admin/players/presentation/screens/player_list_screen.dart
 
@@ -38,7 +32,7 @@ class _PlayerListScreenState extends State<PlayerListScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 2, vsync: this);
+    _tabs = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -376,6 +370,7 @@ class _PlayerListScreenState extends State<PlayerListScreen>
                   tabs: [
                     Tab(text: "All Players  (${_filtered.length})"),
                     Tab(text: "Duplicates  (${dupGroups.length})"),
+                    const Tab(text: "Merge Players"),
                   ],
                 ),
               ]),
@@ -405,6 +400,12 @@ class _PlayerListScreenState extends State<PlayerListScreen>
                       ? const _EmptyState(msg: "No duplicate players detected 🎉",
                           icon: Icons.verified_outlined)
                       : _DuplicatesTab(groups: dupGroups, onMerge: _showMerge),
+
+                  // ── Tab 3: Merge Players ───────────────────────────────────────
+                  _MergePlayersTab(
+                    allPlayers: _players,
+                    onMerge:    _showMerge,
+                  ),
                 ],
               ),
             ),
@@ -686,8 +687,463 @@ class _DuplicatesTab extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// MERGE DIALOG 
+// MERGE PLAYERS TAB  — admin searches any two players and merges manually
 // ══════════════════════════════════════════════════════════════════════════════
+
+class _MergePlayersTab extends StatefulWidget {
+  final List<PlayerModel> allPlayers;
+  final void Function(List<PlayerModel>) onMerge;
+  const _MergePlayersTab({required this.allPlayers, required this.onMerge});
+  @override
+  State<_MergePlayersTab> createState() => _MergePlayersTabState();
+}
+
+class _MergePlayersTabState extends State<_MergePlayersTab> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  // Two slots the admin picks to merge
+  PlayerModel? _slotA;
+  PlayerModel? _slotB;
+
+  @override
+  void dispose() { _searchCtrl.dispose(); super.dispose(); }
+
+  List<PlayerModel> get _results {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return [];
+    return widget.allPlayers.where((p) {
+      return p.isActive &&
+          (p.fullName.toLowerCase().contains(q) ||
+           p.email.toLowerCase().contains(q)    ||
+           p.phone.contains(q)                  ||
+           p.city.toLowerCase().contains(q));
+    }).toList();
+  }
+
+  void _pickPlayer(PlayerModel p) {
+    // Don't allow picking the same player twice
+    if (_slotA?.id == p.id || _slotB?.id == p.id) return;
+    setState(() {
+      if (_slotA == null) {
+        _slotA = p;
+      } else if (_slotB == null) {
+        _slotB = p;
+      } else {
+        // Both slots full — shift: B → A, new pick → B
+        _slotA = _slotB;
+        _slotB = p;
+      }
+    });
+  }
+
+  void _removeSlot(bool isA) =>
+      setState(() { if (isA) _slotA = null; else _slotB = null; });
+
+  void _clearAll() => setState(() {
+    _slotA = null; _slotB = null;
+    _query = ''; _searchCtrl.clear();
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final canMerge = _slotA != null && _slotB != null;
+    final results  = _results;
+
+    return Padding(
+      padding: const EdgeInsets.all(18),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+
+        // ── Info banner ────────────────────────────────────────────────────
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0F5FF),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF0A46D8).withOpacity(0.2)),
+          ),
+          child: Row(children: [
+            const Icon(Icons.info_outline,
+                size: 16, color: Color(0xFF0A46D8)),
+            const SizedBox(width: 10),
+            Expanded(child: Text(
+              'Search for any two players and select them to merge. '
+              'The admin picks which record to keep as the primary.',
+              style: TextStyle(fontSize: 12, color: Colors.blue.shade800,
+                  height: 1.5),
+            )),
+          ]),
+        ),
+
+        const SizedBox(height: 16),
+
+        // ── Selected slots row ─────────────────────────────────────────────
+        Row(children: [
+          Expanded(child: _MergeSlot(
+            label: "Player A",
+            player: _slotA,
+            color: const Color(0xFF0A46D8),
+            onRemove: () => _removeSlot(true),
+          )),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(children: [
+              Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(
+                  color: canMerge
+                      ? const Color(0xFFF59E0B).withOpacity(0.12)
+                      : Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.merge_outlined,
+                    size: 18,
+                    color: canMerge
+                        ? const Color(0xFFF59E0B)
+                        : Colors.grey.shade300),
+              ),
+            ]),
+          ),
+          Expanded(child: _MergeSlot(
+            label: "Player B",
+            player: _slotB,
+            color: const Color(0xFF7C3AED),
+            onRemove: () => _removeSlot(false),
+          )),
+        ]),
+
+        const SizedBox(height: 12),
+
+        // ── Merge button ───────────────────────────────────────────────────
+        SizedBox(width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: canMerge
+                ? () {
+                    widget.onMerge([_slotA!, _slotB!]);
+                    _clearAll();
+                  }
+                : null,
+            icon: const Icon(Icons.merge_outlined, size: 17),
+            label: Text(
+              canMerge
+                  ? 'Merge "${_slotA!.fullName}" and "${_slotB!.fullName}"'
+                  : 'Select two players below to merge',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF59E0B),
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey.shade100,
+              disabledForegroundColor: Colors.grey.shade400,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+        Divider(height: 1, color: Colors.grey.shade200),
+        const SizedBox(height: 14),
+
+        // ── Search box ─────────────────────────────────────────────────────
+        Container(
+          height: 44,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: TextField(
+            controller: _searchCtrl,
+            onChanged: (v) => setState(() => _query = v),
+            style: const TextStyle(fontSize: 14),
+            decoration: InputDecoration(
+              hintText: "Search players by name, email, phone or city...",
+              hintStyle: TextStyle(
+                  fontSize: 13, color: Colors.grey.shade400),
+              prefixIcon: Icon(Icons.search,
+                  size: 18, color: Colors.grey.shade400),
+              suffixIcon: _query.isNotEmpty
+                  ? GestureDetector(
+                      onTap: () => setState(() {
+                        _query = ''; _searchCtrl.clear();
+                      }),
+                      child: Icon(Icons.close_rounded,
+                          size: 16, color: Colors.grey.shade400),
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        // ── Search results / idle hint ─────────────────────────────────────
+        Expanded(child: _query.trim().isEmpty
+            ? _idleHint()
+            : results.isEmpty
+                ? Center(child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off_rounded,
+                          size: 36, color: Colors.grey.shade200),
+                      const SizedBox(height: 10),
+                      Text('No players found for "$_query"',
+                          style: TextStyle(
+                              fontSize: 13, color: Colors.grey.shade400)),
+                    ],
+                  ))
+                : ListView.separated(
+                    itemCount: results.length,
+                    separatorBuilder: (_, __) =>
+                        Divider(height: 1, color: Colors.grey.shade100),
+                    itemBuilder: (_, i) {
+                      final p      = results[i];
+                      final inA    = _slotA?.id == p.id;
+                      final inB    = _slotB?.id == p.id;
+                      final picked = inA || inB;
+                      return _MergeSearchRow(
+                        player:  p,
+                        picked:  picked,
+                        slotLabel: inA ? 'A' : inB ? 'B' : null,
+                        onTap:   () => _pickPlayer(p),
+                      );
+                    },
+                  )),
+      ]),
+    );
+  }
+
+  Widget _idleHint() => Center(
+    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Container(
+        width: 64, height: 64,
+        decoration: BoxDecoration(
+          color: const Color(0xFF0A46D8).withOpacity(0.07),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.manage_search_outlined,
+            size: 30, color: Color(0xFF0A46D8)),
+      ),
+      const SizedBox(height: 14),
+      const Text("Search for players to merge",
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+              color: Color(0xFF6B7280))),
+      const SizedBox(height: 4),
+      Text("Type a name, email or phone to find players",
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+    ]),
+  );
+}
+
+// ── Merge slot widget — shows selected player or empty placeholder ──────────
+class _MergeSlot extends StatelessWidget {
+  final String       label;
+  final PlayerModel? player;
+  final Color        color;
+  final VoidCallback onRemove;
+  const _MergeSlot({required this.label, required this.player,
+      required this.color, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    final isEmpty = player == null;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isEmpty ? Colors.grey.shade50 : color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isEmpty ? Colors.grey.shade200 : color.withOpacity(0.35),
+          width: isEmpty ? 1 : 1.5,
+          style: isEmpty ? BorderStyle.solid : BorderStyle.solid,
+        ),
+      ),
+      child: isEmpty
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.person_add_outlined,
+                      size: 20, color: Colors.grey.shade300),
+                ),
+                const SizedBox(height: 8),
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700,
+                        color: Colors.grey.shade400)),
+                const SizedBox(height: 2),
+                Text("Tap a player below",
+                    style: TextStyle(
+                        fontSize: 10, color: Colors.grey.shade300)),
+              ],
+            )
+          : Row(children: [
+              _Avatar(player: player!, radius: 20),
+              const SizedBox(width: 10),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(label,
+                          style: const TextStyle(fontSize: 9,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700)),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(child: Text(player!.fullName,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827)))),
+                  ]),
+                  const SizedBox(height: 3),
+                  Text(player!.skillLevel,
+                      style: TextStyle(fontSize: 10,
+                          color: player!.skillColor,
+                          fontWeight: FontWeight.w600)),
+                  Text(player!.city,
+                      style: TextStyle(fontSize: 10,
+                          color: Colors.grey.shade400)),
+                ],
+              )),
+              GestureDetector(
+                onTap: onRemove,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(Icons.close_rounded,
+                      size: 14, color: Colors.grey.shade500),
+                ),
+              ),
+            ]),
+    );
+  }
+}
+
+// ── Search result row in Merge Players tab ─────────────────────────────────
+class _MergeSearchRow extends StatefulWidget {
+  final PlayerModel  player;
+  final bool         picked;
+  final String?      slotLabel;   // 'A' or 'B' if already selected
+  final VoidCallback onTap;
+  const _MergeSearchRow({required this.player, required this.picked,
+      required this.slotLabel, required this.onTap});
+  @override
+  State<_MergeSearchRow> createState() => _MergeSearchRowState();
+}
+
+class _MergeSearchRowState extends State<_MergeSearchRow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p      = widget.player;
+    final picked = widget.picked;
+    final label  = widget.slotLabel;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit:  (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          color: picked
+              ? const Color(0xFF0A46D8).withOpacity(0.04)
+              : _hovered
+                  ? Colors.grey.shade50
+                  : Colors.white,
+          child: Row(children: [
+            _Avatar(player: p, radius: 20),
+            const SizedBox(width: 12),
+
+            // Name + details
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(p.fullName,
+                    style: const TextStyle(fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF111827))),
+                const SizedBox(height: 2),
+                Text('${p.email}  ·  ${p.phone}',
+                    style: TextStyle(fontSize: 11,
+                        color: Colors.grey.shade500),
+                    overflow: TextOverflow.ellipsis),
+              ],
+            )),
+
+            // Skill badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: p.skillColor.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(p.skillLevel,
+                  style: TextStyle(fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: p.skillColor)),
+            ),
+
+            const SizedBox(width: 10),
+
+            // Picked indicator OR add button
+            if (picked)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A46D8),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text("Slot $label",
+                    style: const TextStyle(fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700)),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Text("Select",
+                    style: TextStyle(fontSize: 10,
+                        color: Colors.grey.shade500,
+                        fontWeight: FontWeight.w600)),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
 
 class _MergeDialog extends StatefulWidget {
   final List<PlayerModel> group;
