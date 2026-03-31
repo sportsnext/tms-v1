@@ -708,6 +708,43 @@ class _BracketCard extends StatelessWidget {
                     color: bWins ? const Color(0xFF4F46E5) : Colors.grey.shade400)),
             ]),
           )),
+          // ── BOTTOM: SCHEDULE INFO (Time, Date, Court) ─────────
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(9)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Time & Date Row
+            Row(children: [
+              const Icon(Icons.access_time, size: 10, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                // Time first, then formatted Date
+                "${_fmt12hr(f.time)} • ${_fmtDate(f.date)}",
+                style: TextStyle(
+                  fontSize: 9, 
+                  color: Colors.grey.shade600, 
+                  fontWeight: FontWeight.w500
+                ),
+              ),
+            ]),
+            // Court Number
+            Text(
+              "Court : ${f.court.isEmpty ? '?' : f.court}",
+              style: TextStyle(
+                fontSize: 9, 
+                color: Colors.grey.shade600, 
+                fontWeight: FontWeight.bold
+              ),
+            ),
+          ],
+        ),
+      ),
         ]),
         // Edit button
         Positioned(top: 3, right: 3, child: GestureDetector(onTap: onEdit,
@@ -760,11 +797,34 @@ class _RoundRobinTable extends StatelessWidget {
         ])),
       ])),
       const SizedBox(width: 12),
-      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        if (f.date.isNotEmpty) Text(f.date, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-        if (f.time.isNotEmpty) Text(f.time, style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
-        if (f.court.isNotEmpty) Text(f.court, style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
-      ]),
+     Column(
+  crossAxisAlignment: CrossAxisAlignment.end, 
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    // 1. Formatted Time (e.g., 2:30 PM)
+    if (f.time.isNotEmpty) 
+      Text(
+        _fmt12hr(f.time), 
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))
+      ),
+      
+    const SizedBox(height: 2),
+
+    // 2. Formatted Date (e.g., 31-03-2026)
+    if (f.date.isNotEmpty) 
+      Text(
+        _fmtDate(f.date), 
+        style: TextStyle(fontSize: 10, color: Colors.grey.shade500)
+      ),
+
+    // 3. Court info
+    if (f.court.isNotEmpty) 
+      Text(
+        "Court: ${f.court}", 
+        style: TextStyle(fontSize: 10, color: Colors.grey.shade400, fontStyle: FontStyle.italic)
+      ),
+  ],
+),
       const SizedBox(width: 8),
       _StatusPill(label: f.statusLabel, color: f.statusColor),
       const SizedBox(width: 8),
@@ -1104,10 +1164,12 @@ class _CalendarTabState extends State<_CalendarTab> {
     return true;
   }).toList();
   Map<String, List<FixtureModel>> get _byDate {
-    final map = <String, List<FixtureModel>>{};
-    for (final f in _filtered) map.putIfAbsent(f.date.isEmpty ? 'Unscheduled' : f.date, () => []).add(f);
-    return Map.fromEntries(map.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+  final map = <String, List<FixtureModel>>{};
+  for (final f in _filtered) {
+    map.putIfAbsent(f.date.isEmpty ? 'Unscheduled' : f.date, () => []).add(f);
   }
+  return Map.fromEntries(map.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+}
 
   // ── CSV export —
   void _exportCsv() {
@@ -1225,7 +1287,7 @@ class _CalListView extends StatelessWidget {
               Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [
                 Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                     decoration: BoxDecoration(color: const Color(0xFF4F46E5).withOpacity(0.08), borderRadius: BorderRadius.circular(20)),
-                    child: Text(e.key, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F46E5)))),
+                    child: Text(_fmtDate(e.key), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F46E5)))),
                 const SizedBox(width: 10), Expanded(child: Divider(color: Colors.grey.shade200))])),
               ...e.value.map((f) => Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -1235,7 +1297,7 @@ class _CalListView extends StatelessWidget {
                       boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6)]),
                   child: Row(children: [
                     Container(width: 4, height: 44, margin: const EdgeInsets.only(right: 12), decoration: BoxDecoration(color: f.statusColor, borderRadius: BorderRadius.circular(4))),
-                    if (f.time.isNotEmpty) SizedBox(width: 42, child: Text(f.time, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade600))),
+                   if (f.time.isNotEmpty) SizedBox(width: 65, child: Text(_fmt12hr(f.time), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade600))),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text('${f.teamAName}  vs  ${f.teamBName}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
                       Row(children: [_FormatBadge(label: f.round),
@@ -1263,11 +1325,11 @@ class _CalGridView extends StatelessWidget {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(color: const Color(0xFF4F46E5).withOpacity(0.08), borderRadius: BorderRadius.circular(8)),
-                      child: Text(e.key, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF4F46E5)))),
+                      child: Text(_fmtDate(e.key), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF4F46E5)))),
                   const SizedBox(height: 8),
                   ...e.value.map((f) => Padding(padding: const EdgeInsets.only(bottom: 4), child: Row(children: [
                     Container(width: 6, height: 6, margin: const EdgeInsets.only(right: 6), decoration: BoxDecoration(color: f.statusColor, shape: BoxShape.circle)),
-                    Expanded(child: Text('${f.teamAName} vs ${f.teamBName}', overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11))),
+                    Expanded(child: Text('${_fmt12hr(f.time)}: ${f.teamAName} vs ${f.teamBName}', overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11))),
                   ]))),
                 ]))).toList()));
   }
